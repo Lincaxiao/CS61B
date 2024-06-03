@@ -113,14 +113,121 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        board.setViewingPerspective(side);
+        int x = board.size();
+        for (int i = 0; i < x; i++) {
+            int cnt = find_node_number_in_column(i);
+            int first_line, second_line, third_line;
+            if (cnt == 0) {
+                continue;
+            } else if (cnt == 1) {
+                first_line = find_first_unnull_line(i, 3);
+                move_top_node(i, first_line);
+                if (first_line != 3) {
+                    changed = true;
+                }
+            } else if (cnt == 2) {
+                first_line = find_first_unnull_line(i, 3);
+                second_line = find_first_unnull_line(i, first_line - 1);
+                if (second_line != 2) {
+                    changed = true;
+                }
+                move_top_node(i, first_line);
+                if (board.tile(i, 3).value() == board.tile(i, second_line).value()) {
+                    board.move(i, 3, board.tile(i, second_line));
+                    score = score + board.tile(i, 3).value();
+                    changed = true;
+                } else if (second_line != 2) {
+                    board.move(i, 2, board.tile(i, second_line));
+                    changed = true;
+                }
+            } else if (cnt == 3) {
+                first_line = find_first_unnull_line(i, 3);
+                second_line = find_first_unnull_line(i, first_line - 1);
+                third_line = find_first_unnull_line(i, second_line - 1);
+                move_top_node(i, first_line);
+                if (third_line != 3) {
+                    changed = true;
+                }
+                if (board.tile(i, 3).value() == board.tile(i, second_line).value()) {
+                    board.move(i, 3, board.tile(i, second_line));
+                    score = score + board.tile(i, 3).value();
+                    changed = true;
+                    board.move(i, 2, board.tile(i, third_line));
+                } else if (board.tile(i, third_line).value() == board.tile(i, second_line).value()) {
+                    if (second_line != 2) {
+                        board.move(i, 2, board.tile(i, 1));
+                    }
+                    board.move(i, 2, board.tile(i, third_line));
+                    changed = true;
+                    score += board.tile(i, 2).value();
+                } else if (third_line == 0) {
+                    if (second_line == 1) {
+                        board.move(i, 2, board.tile(i, second_line));
+                    }
+                    board.move(i, 1, board.tile(i, third_line));
+                }
+            } else {
+                Tile t3 = board.tile(i, 3);
+                Tile t2 = board.tile(i, 2);
+                Tile t1 = board.tile(i, 1);
+                Tile t0 = board.tile(i, 0);
+                int k = 0; // k is times of merge
+                if (t3.value() == t2.value()) {
+                    changed = true;
+                    k += 10;
+                    board.move(i, 3, t2);
+                    score += board.tile(i, 3).value();
+                }
+                if (t1.value() == t0.value()) {
+                    changed = true;
+                    k += 1;
+                    board.move(i, 1, t0);
+                    score += board.tile(i, 1).value();
+                }
+                if (k == 10) { // means only first two merge
+                    board.move(i, 2, t1);
+                    board.move(i, 1, t0);
+                } else if (k == 11) { // means merge twice
+                    board.move(i, 2, board.tile(i, 1));
+                }
+            }
+        }
         checkGameOver();
+        board.setViewingPerspective(Side.NORTH);
         if (changed) {
             setChanged();
         }
         return changed;
     }
-
+    /*上移最上面的元素*/
+    private boolean move_top_node (int i, int first_line){
+        if (first_line != 3) {
+            board.move(i, 3, board.tile(i, first_line));
+            return true;
+        }
+        return false;
+    }
+    /*找到最上面不为null的行，如果全为null，返回-1*/
+    private int find_first_unnull_line (int i, int j) {
+        for (; j >= 0 ; j--) {
+            if (board.tile(i, j) != null) {
+                return j;
+            }
+        }
+        return -1;
+    }
+    /*找到此列中元素的数量*/
+    private int find_node_number_in_column (int i) {
+        int cnt = 0;
+        for (int j = 0; j <= 3; j++) {
+            if (board.tile(i, j) != null) {
+                cnt += 1;
+            }
+        }
+        return cnt;
+    }
+    /*检查一行里merge过的次数*/
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
      */
@@ -138,6 +245,14 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int x = b.size();
+        for (int i = 0; i < x; i ++) {
+            for (int j = 0; j < x; j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +263,14 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int x = b.size();
+        for (int i = 0; i < x; i ++) {
+            for (int j = 0; j < x; j++) {
+                if (b.tile(i, j) != null && b.tile(i, j).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +282,28 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        int x = b.size();
+        int cnt = 0;
+        for (int i = 0; i < x; i ++) {
+            for (int j = 0; j < x; j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
+        for (int i = 0; i < x; i ++) {
+            for (int j = 0; j < x; j++) {
+                if (i < 3 && b.tile(i, j).value() == b.tile(i + 1, j).value()) {
+                    return true;
+                } else if (i > 0 && b.tile(i, j).value() == b.tile(i - 1, j).value()) {
+                    return true;
+                } else if (j < 3 && b.tile(i, j).value() == b.tile(i, j + 1).value()) {
+                    return true;
+                } else if (j > 0 && b.tile(i, j).value() == b.tile(i, j - 1).value()) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
