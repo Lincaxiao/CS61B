@@ -1,8 +1,8 @@
 package deque;
 
-public class LinkedListDeque<Element> {
-    public class Node {
-        public Element item;
+public class LinkedListDeque<T> {
+    private class Node {
+        public T item;
         public Node prev;
         public Node next;
 
@@ -11,13 +11,13 @@ public class LinkedListDeque<Element> {
             this.prev = null;
         }
 
-        public Node (Element item) {
+        public Node (T item) {
             this.item = item;
             this.next = null;
             this.prev = null;
         }
 
-        public Node (Element item, Node prev, Node next) {
+        public Node (T item, Node prev, Node next) {
             this.prev = prev;
             this.next = next;
             this.item =item;
@@ -25,7 +25,7 @@ public class LinkedListDeque<Element> {
     }
 
     private int size;
-    public Node sentinel;
+    private final Node sentinel;
 
     public LinkedListDeque () {
         this.sentinel = new Node();
@@ -36,7 +36,7 @@ public class LinkedListDeque<Element> {
         return size == 0;
     }
 
-    public void addFirst (Element item) {
+    public void addFirst (T item) {
         Node addone = new Node(item, sentinel, sentinel.next);
         /* if originally empty */
         if (isEmpty()) {
@@ -52,7 +52,7 @@ public class LinkedListDeque<Element> {
         }
     }
 
-    public void addLast(Element item) {
+    public void addLast(T item) {
         Node addone = new Node(item, sentinel.prev, sentinel);
         /* if originally empty */
         if (isEmpty()) {
@@ -85,17 +85,17 @@ public class LinkedListDeque<Element> {
         System.out.print("\n");
     }
 
-    public Element removeFirst() {
+    public T removeFirst() {
         if (size() == 0) {
             return null;
         } else if (size() == 1) {
             sentinel.prev = null;
-            Element val = sentinel.next.item;
+            T val = sentinel.next.item;
             size--;
             sentinel.next = null;
             return  val;
         } else {
-            Element val = sentinel.next.item;
+            T val = sentinel.next.item;
             sentinel.next = sentinel.next.next;
             sentinel.next.prev = sentinel;
             size--;
@@ -103,17 +103,17 @@ public class LinkedListDeque<Element> {
         }
     }
 
-    public Element removeLast() {
+    public T removeLast() {
         if (size() == 0) {
             return null;
         } else if (size() == 1) {
             sentinel.prev = null;
-            Element val = sentinel.next.item;
+            T val = sentinel.next.item;
             size--;
             sentinel.next = null;
             return  val;
         } else {
-            Element val = sentinel.prev.item;
+            T val = sentinel.prev.item;
             sentinel.prev = sentinel.prev.prev;
             sentinel.prev.next = sentinel;
             size--;
@@ -121,7 +121,7 @@ public class LinkedListDeque<Element> {
         }
     }
 
-    public Element get(int index) {
+    public T get(int index) {
         if (index >= size) {
             return null;
         }
@@ -132,7 +132,7 @@ public class LinkedListDeque<Element> {
         return current.item;
     }
 
-    private Element getRecursiveHelper(Node node, int index) {
+    private T getRecursiveHelper(Node node, int index) {
         if (index == 0) {
             return node.item;
         } else {
@@ -140,11 +140,15 @@ public class LinkedListDeque<Element> {
         }
     }
     
-    public Element getRecursive(int index) {
+    public T getRecursive(int index) {
         if (index >= size) {
             return null;
         } else {
             return getRecursiveHelper(sentinel.next, index);
         }
+    }
+
+    public boolean equals(Object object) {
+        return false;
     }
 }
