@@ -2,22 +2,22 @@ package deque;
 
 public class LinkedListDeque<Element> {
     public class Node {
-        Element item;
-        Node prev;
-        Node next;
+        public Element item;
+        public Node prev;
+        public Node next;
 
-        Node () {
+        public Node () {
             this.next = null;
             this.prev = null;
         }
 
-        Node (Element item) {
+        public Node (Element item) {
             this.item = item;
             this.next = null;
             this.prev = null;
         }
 
-        Node (Element item, Node prev, Node next) {
+        public Node (Element item, Node prev, Node next) {
             this.prev = prev;
             this.next = next;
             this.item =item;
@@ -25,9 +25,9 @@ public class LinkedListDeque<Element> {
     }
 
     private int size;
-    Node sentinel;
+    public Node sentinel;
 
-    LinkedListDeque () {
+    public LinkedListDeque () {
         this.sentinel = new Node();
         size = 0;
     }
