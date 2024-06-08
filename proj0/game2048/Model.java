@@ -185,11 +185,19 @@ public class Model extends Observable {
                     board.move(i, 1, t0);
                     score += board.tile(i, 1).value();
                 }
+                if (t3.value() != t2.value() && t2.value() == t1.value()) {
+                    changed = true;
+                    k += 100;
+                    board.move(i, 2, t1);
+                    score += board.tile(i, 2).value();
+                }
                 if (k == 10) { // means only first two merge
                     board.move(i, 2, t1);
                     board.move(i, 1, t0);
                 } else if (k == 11) { // means merge twice
                     board.move(i, 2, board.tile(i, 1));
+                } else if (k == 100) {
+                    board.move(i, 1, t0);
                 }
             }
         }
