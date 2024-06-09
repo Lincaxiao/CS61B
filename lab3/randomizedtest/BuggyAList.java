@@ -59,12 +59,28 @@ public class BuggyAList<Item> {
     /** Deletes item from back of the list and
       * returns deleted item. */
     public Item removeLast() {
-        if ((size * 4 < items.length) && (size > 4)) {
-            resize(size / 4);
+        if (size() == 0) {
+            return null;
         }
-        Item x = getLast();
-        items[size - 1] = null;
-        size = size - 1;
-        return x;
+        Item val = items[--size];
+        items[size] = null;
+        check();
+        return val;
+    }
+    private void check () {
+        /* if it needs to enlarge */
+        int length = items.length;
+        if (size + 1 == length) {
+            Item[] tmp = items;
+            length *= 2;
+            items = (Item[]) new Object[length];
+            System.arraycopy(tmp, 0, items, 0, size);
+        } else if (length > 16 && size * 4 <= length) {
+            Item[] tmp = items;
+            length /= 2;
+            items = (Item[]) new Object[length];
+            System.arraycopy(tmp, 0, items, 0, size);
+            check();
+        }
     }
 }
