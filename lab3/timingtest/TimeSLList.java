@@ -28,7 +28,7 @@ public class TimeSLList {
         AList<Integer> opCounts = new AList<>();
         for (int i = 1000; i <= 128000; i *= 2) {
             Ns.addLast(i);
-            AList<Integer> testList = new AList<>();
+            SLList<Integer> testList = new SLList<>();
 
             for (int j = 0; j < i; j++) {
                 testList.addLast(j);
