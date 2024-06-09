@@ -26,7 +26,7 @@ public class AList<Item> {
 
     /** Resizes the underlying array to the target capacity. */
     private void resize(int capacity) {
-        Item[] a = (Item[]) new Object[capacity];
+        Item[] a = (Item[]) new Object[capacity*2];
         System.arraycopy(items, 0, a, 0, size);
         items = a;
     }
