@@ -155,7 +155,9 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return getRecursiveHelper(sentinel.next, index);
         }
     }
-
+    public boolean isEmpty() {
+        return size == 0;
+    }
     @Override
     public boolean equals(Object other) {
         if (other == null || !(other instanceof Deque)) {
