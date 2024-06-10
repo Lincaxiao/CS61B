@@ -32,15 +32,19 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || other.getClass() != this.getClass()) {
+        if (other == null || !(other instanceof Deque)) {
             return false;
         }
-        ArrayDeque<T> tmp = (ArrayDeque<T>) other;
-        if (tmp.size() != this.size()) {
+        Deque<T> otherDeque = (Deque<T>) other;
+        if (this.size() != otherDeque.size()) {
             return false;
         }
-        for (int i = 0; i < size; i++) {
-            if (this.get(i) != tmp.get(i)) {
+        Iterator<T> thisIterator = this.iterator();
+        Iterator<T> otherIterator = otherDeque.iterator();
+        while (thisIterator.hasNext() && otherIterator.hasNext()) {
+            T thisItem = thisIterator.next();
+            T otherItem = otherIterator.next();
+            if (!thisItem.equals(otherItem)) {
                 return false;
             }
         }
