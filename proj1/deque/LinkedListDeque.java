@@ -1,6 +1,10 @@
 package deque;
+import org.junit.Test;
 
-public class LinkedListDeque<T> {
+import java.util.NoSuchElementException;
+import java.util.Iterator;
+
+public class LinkedListDeque<T> implements Deque<T> {
     private class Node {
         public T item;
         public Node prev;
@@ -11,31 +15,72 @@ public class LinkedListDeque<T> {
             this.prev = null;
         }
 
-        public Node (T item) {
-            this.item = item;
-            this.next = null;
-            this.prev = null;
-        }
-
         public Node (T item, Node prev, Node next) {
             this.prev = prev;
             this.next = next;
             this.item =item;
         }
     }
+    private class LinkedIterator implements Iterator<T> {
+        private Node current;
+        public LinkedIterator(Node sentinel) {
+            current = sentinel.next;
+        }
+        public boolean hasNext() {
+            return (current != null) &&(current != sentinel);
+        }
+
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T item = current.next.item;
+            current = current.next;
+            return item;
+        }
+    }
+
+    public Iterator<T> iterator() {
+        return new LinkedIterator(sentinel);
+    }
+
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (other.getClass() != this.getClass()) {
+            return false;
+        }
+        LinkedListDeque<T> object = (LinkedListDeque<T>) other;
+        if (size != object.size()) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        for (int i = 0; i < size; i++) {
+            if (get(i) != object.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private int size;
     private final Node sentinel;
 
+    private Node getSentinel() {
+        return this.sentinel;
+    }
     public LinkedListDeque () {
         this.sentinel = new Node();
         size = 0;
     }
-
+    @Override
     public boolean isEmpty () {
         return size == 0;
     }
-
+    @Override
     public void addFirst (T item) {
         Node addone = new Node(item, sentinel, sentinel.next);
         /* if originally empty */
@@ -44,14 +89,13 @@ public class LinkedListDeque<T> {
             addone.next = sentinel;
             sentinel.next = addone;
             sentinel.prev = addone;
-            return;
         } else {
             size++;
             sentinel.next = addone;
             addone.next.prev = addone;
         }
     }
-
+    @Override
     public void addLast(T item) {
         Node addone = new Node(item, sentinel.prev, sentinel);
         /* if originally empty */
@@ -67,11 +111,11 @@ public class LinkedListDeque<T> {
             addone.prev.next = addone;
         }
     }
-
+    @Override
     public int size() {
         return size;
     }
-
+    @Override
     public void printDeque() {
         Node current = sentinel;
         int j = 0;
@@ -84,7 +128,7 @@ public class LinkedListDeque<T> {
         }
         System.out.print("\n");
     }
-
+    @Override
     public T removeFirst() {
         if (size() == 0) {
             return null;
@@ -102,7 +146,7 @@ public class LinkedListDeque<T> {
             return val;
         }
     }
-
+    @Override
     public T removeLast() {
         if (size() == 0) {
             return null;
@@ -120,7 +164,7 @@ public class LinkedListDeque<T> {
             return val;
         }
     }
-
+    @Override
     public T get(int index) {
         if (index >= size) {
             return null;
@@ -146,9 +190,5 @@ public class LinkedListDeque<T> {
         } else {
             return getRecursiveHelper(sentinel.next, index);
         }
-    }
-
-    public boolean equals(Object object) {
-        return false;
     }
 }

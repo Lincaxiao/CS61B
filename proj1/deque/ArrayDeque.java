@@ -1,16 +1,56 @@
 package deque;
 
-public class ArrayDeque<T> {
+import org.junit.Test;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class ArrayDeque<T> implements Deque<T> {
     private int size;
     private T[] TArray;
     private int length;
 
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T>{
+        int cur_idx;
+        public ArrayDequeIterator() {
+            cur_idx = 0;
+        }
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return TArray[cur_idx++];
+        }
+        @Override
+        public boolean hasNext () {
+            return cur_idx < size;
+        }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || other.getClass() != this.getClass() || size != ((ArrayDeque<?>) other).size()) {
+            return false;
+        }
+        ArrayDeque<T> tmp = (ArrayDeque<T>) other;
+        for (int i = 0; i <size; i++) {
+            if (this.get(i) != tmp.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
     public ArrayDeque () {
         size = 0;
         length = 8;
         TArray = (T[]) new Object[8];
     }
-
+    @Override
     public boolean isEmpty () {
         return size == 0;
     }
@@ -30,7 +70,7 @@ public class ArrayDeque<T> {
             check();
         }
     }
-
+    @Override
     public void addFirst (T item) {
         check();
         T[] tmp = (T[]) new Object[length];
@@ -38,16 +78,16 @@ public class ArrayDeque<T> {
         tmp[0] = item;
         TArray = tmp;
     }
-
+    @Override
     public void addLast (T item) {
         check();
         TArray[size++] = item;
     }
-
+    @Override
     public int size() {
         return size;
     }
-
+    @Override
     public void printDeque () {
         int j = 0;
         for (int i = 0; i <size; i++, j++) {
@@ -58,7 +98,7 @@ public class ArrayDeque<T> {
         }
         System.out.print("\n");
     }
-
+    @Override
     public T removeFirst () {
         if (size() == 0) {
             return null;
@@ -68,7 +108,7 @@ public class ArrayDeque<T> {
         check();
         return val;
     }
-
+    @Override
     public T removeLast () {
         if (size() == 0) {
             return null;
@@ -78,7 +118,7 @@ public class ArrayDeque<T> {
         check();
         return val;
     }
-
+    @Override
     public T get (int index) {
         if (index >= size) {
             return null;
