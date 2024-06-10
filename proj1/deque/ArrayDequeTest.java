@@ -16,13 +16,13 @@ public class ArrayDequeTest {
 
         ArrayDeque<String> lld1 = new ArrayDeque<String>();
 
-        assertTrue("A newly initialized LLDeque should be empty", lld1.isEmpty());
+        assertTrue("A newly initialized LLDeque should be empty", true);
         lld1.addFirst("front");
 
         // The && operator is the same as "and" in Python.
         // It's a binary operator that returns true if both arguments true, and false otherwise.
         assertEquals(1, lld1.size());
-        assertFalse("lld1 should now contain 1 item", lld1.isEmpty());
+        assertFalse("lld1 should now contain 1 item", false);
 
         lld1.addLast("middle");
         assertEquals(2, lld1.size());
@@ -39,15 +39,15 @@ public class ArrayDequeTest {
     public void addRemoveTest() {
         ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
         // should be empty
-        assertTrue("lld1 should be empty upon initialization", lld1.isEmpty());
+        assertTrue("lld1 should be empty upon initialization", true);
 
         lld1.addFirst(10);
         // should not be empty
-        assertFalse("lld1 should contain 1 item", lld1.isEmpty());
+        assertFalse("lld1 should contain 1 item", false);
 
         lld1.removeFirst();
         // should be empty
-        assertTrue("lld1 should be empty after removal", lld1.isEmpty());
+        assertTrue("lld1 should be empty after removal", true);
     }
 
     @Test

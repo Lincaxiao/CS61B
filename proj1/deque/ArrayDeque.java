@@ -14,13 +14,13 @@ public class ArrayDeque<T> implements Deque<T> {
         return new ArrayDequeIterator();
     }
 
-    private class ArrayDequeIterator implements Iterator<T>{
+    private class ArrayDequeIterator implements Iterator<T> {
         int cur_idx;
-        public ArrayDequeIterator() {
+        public ArrayDequeIterator () {
             cur_idx = 0;
         }
         @Override
-        public T next() {
+        public T next () {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
@@ -33,11 +33,14 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (other == null || other.getClass() != this.getClass() || size != ((ArrayDeque<?>) other).size()) {
+    public boolean equals (Object other) {
+        if (other == null || other.getClass() != this.getClass()) {
             return false;
         }
         ArrayDeque<T> tmp = (ArrayDeque<T>) other;
+        if (tmp.size() != this.size()) {
+            return false;
+        }
         for (int i = 0; i <size; i++) {
             if (this.get(i) != tmp.get(i)) {
                 return false;
@@ -49,10 +52,6 @@ public class ArrayDeque<T> implements Deque<T> {
         size = 0;
         length = 8;
         TArray = (T[]) new Object[8];
-    }
-    @Override
-    public boolean isEmpty () {
-        return size == 0;
     }
 
     private void check () {
@@ -84,13 +83,13 @@ public class ArrayDeque<T> implements Deque<T> {
         TArray[size++] = item;
     }
     @Override
-    public int size() {
+    public int size () {
         return size;
     }
     @Override
     public void printDeque () {
         int j = 0;
-        for (int i = 0; i <size; i++, j++) {
+        for (int i = 0; i < size; i++, j++) {
             System.out.print(TArray[i]);
             if (j < size - 1) {
                 System.out.print(" ");
