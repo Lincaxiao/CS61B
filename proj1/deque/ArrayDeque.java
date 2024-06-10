@@ -16,6 +16,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         tArray = (T[]) new Object[8];
     }
 
+    @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
@@ -46,21 +47,22 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == null || !(other instanceof Deque)) {
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || !(o instanceof Deque)) {
             return false;
         }
-        Deque<T> otherDeque = (Deque<T>) other;
-        if (this.size() != otherDeque.size()) {
+
+        Deque<T> other = (Deque<T>) o;
+        if (size() != other.size()) {
             return false;
         }
-        Iterator<T> thisIterator = this.iterator();
-        Iterator<T> otherIterator = otherDeque.iterator();
-        while (thisIterator.hasNext() && otherIterator.hasNext()) {
-            T thisItem = thisIterator.next();
-            T otherItem = otherIterator.next();
-            if (!thisItem.equals(otherItem)) {
+        for (int i = 0; i < size(); i++) {
+            T item1 = get(i);
+            T item2 = other.get(i);
+            if (!item1.equals(item2)) {
                 return false;
             }
         }
