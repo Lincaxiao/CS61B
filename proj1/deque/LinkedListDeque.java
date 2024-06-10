@@ -1,24 +1,23 @@
 package deque;
-import org.junit.Test;
 
 import java.util.NoSuchElementException;
 import java.util.Iterator;
 
-public class LinkedListDeque<T> implements Deque<T> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private class Node {
-        public T item;
-        public Node prev;
-        public Node next;
+        private T item;
+        private Node prev;
+        private Node next;
 
         public Node () {
             this.next = null;
             this.prev = null;
         }
 
-        public Node (T item, Node prev, Node next) {
+        Node(T item, Node prev, Node next) {
             this.prev = prev;
             this.next = next;
-            this.item =item;
+            this.item = item;
         }
     }
     private class LinkedIterator implements Iterator<T> {
@@ -75,13 +74,13 @@ public class LinkedListDeque<T> implements Deque<T> {
         return this.sentinel;
     }
 
-    public LinkedListDeque () {
-        this.sentinel = new Node ();
+    public LinkedListDeque() {
+        this.sentinel = new Node();
         size = 0;
     }
 
     @Override
-    public void addFirst (T item) {
+    public void addFirst(T item) {
         Node addone = new Node(item, sentinel, sentinel.next);
         /* if originally empty */
         if (size == 0) {
