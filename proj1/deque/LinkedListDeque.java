@@ -140,6 +140,9 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         return current.item;
     }
 
+    public boolean isEmpty() {
+        return size == 0;
+    }
     private T getRecursiveHelper(Node node, int index) {
         if (index == 0) {
             return node.item;
