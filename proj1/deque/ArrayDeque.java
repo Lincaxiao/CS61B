@@ -5,8 +5,16 @@ import java.util.NoSuchElementException;
 
 public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
+    private int front;
+    private int rear;
     private T[] tArray;
-    private int length;
+
+    public ArrayDeque() {
+        size = 0;
+        front = 0;
+        rear = 0;
+        tArray = (T[]) new Object[8];
+    }
 
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
@@ -14,19 +22,27 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private class ArrayDequeIterator implements Iterator<T> {
         int curIdx;
+        int count;
+
         ArrayDequeIterator() {
-            curIdx = 0;
+            curIdx = front;
+            count = 0;
         }
+
+        @Override
+        public boolean hasNext() {
+            return count < size;
+        }
+
         @Override
         public T next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return tArray[curIdx++];
-        }
-        @Override
-        public boolean hasNext() {
-            return curIdx < size;
+            T item = tArray[curIdx];
+            curIdx = (curIdx + 1) % tArray.length;
+            count++;
+            return item;
         }
     }
 
@@ -50,80 +66,88 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         return true;
     }
-    public ArrayDeque() {
-        size = 0;
-        length = 8;
-        tArray = (T[]) new Object[8];
+
+    private void resize(int newCapacity) {
+        T[] newArray = (T[]) new Object[newCapacity];
+        for (int i = 0; i < size; i++) {
+            newArray[i] = tArray[(front + i) % tArray.length];
+        }
+        tArray = newArray;
+        front = 0;
+        rear = size;
     }
 
-    private void check() {
-        /* if it needs to enlarge */
-        if (size + 1 == length) {
-            T[] tmp = tArray;
-            length *= 2;
-            tArray = (T[]) new Object[length];
-            System.arraycopy(tmp, 0, tArray, 0, size);
-        } else if (length > 16 && size * 4 <= length) {
-            T[] tmp = tArray;
-            length /= 2;
-            tArray = (T[]) new Object[length];
-            System.arraycopy(tmp, 0, tArray, 0, size);
-            check();
-        }
-    }
     @Override
     public void addFirst(T item) {
-        check();
-        T[] tmp = (T[]) new Object[length];
-        System.arraycopy(tArray, 0, tmp, 1, size++);
-        tmp[0] = item;
-        tArray = tmp;
+        if (size == tArray.length) {
+            resize(size * 2);
+        }
+        front = (front - 1 + tArray.length) % tArray.length;
+        tArray[front] = item;
+        size++;
     }
+
     @Override
     public void addLast(T item) {
-        check();
-        tArray[size++] = item;
+        if (size == tArray.length) {
+            resize(size * 2);
+        }
+        tArray[rear] = item;
+        rear = (rear + 1) % tArray.length;
+        size++;
     }
+
     @Override
     public int size() {
         return size;
     }
+
     @Override
     public void printDeque() {
-        int j = 0;
-        for (int i = 0; i < size; i++, j++) {
-            System.out.print(tArray[i]);
-            if (j < size - 1) {
+        for (int i = 0; i < size; i++) {
+            System.out.print(tArray[(front + i) % tArray.length]);
+            if (i < size - 1) {
                 System.out.print(" ");
             }
         }
-        System.out.print("\n");
+        System.out.println();
     }
+
     @Override
     public T removeFirst() {
-        if (size() == 0) {
+        if (size == 0) {
             return null;
         }
-        T val = tArray[0];
-        System.arraycopy(tArray, 1, tArray, 0, --size);
-        check();
-        return val;
+        T item = tArray[front];
+        tArray[front] = null;
+        front = (front + 1) % tArray.length;
+        size--;
+        if (size > 0 && size == tArray.length / 4) {
+            resize(tArray.length / 2);
+        }
+        return item;
     }
+
     @Override
     public T removeLast() {
-        if (size() == 0) {
+        if (size == 0) {
             return null;
         }
-        T val = tArray[--size];
-        tArray[size] = null;
-        check();
-        return val;
+        rear = (rear - 1 + tArray.length) % tArray.length;
+        T item = tArray[rear];
+        tArray[rear] = null;
+        size--;
+        if (size > 0 && size == tArray.length / 4) {
+            resize(tArray.length / 2);
+        }
+        return item;
     }
+
     @Override
     public T get(int index) {
-        if (index >= size) {
+        if (index >= size || index < 0) {
             return null;
         }
-        return tArray[index];
+        return tArray[(front + index) % tArray.length];
     }
 }
