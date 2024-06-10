@@ -56,9 +56,6 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         tArray = (T[]) new Object[8];
     }
 
-    public boolean isEmpty() {
-        return size == 0;
-    }
     private void check() {
         /* if it needs to enlarge */
         if (size + 1 == length) {
