@@ -1,11 +1,7 @@
 package gh2;
 
-// TODO: uncomment the following import once you're ready to start this portion
 import deque.Deque;
 import deque.ArrayDeque;
-// TODO: maybe more imports
-
-import java.sql.Array;
 
 //Note: This file will not compile until you complete the Deque implementations
 public class GuitarString {
@@ -21,9 +17,9 @@ public class GuitarString {
 
     /* Create a guitar string of the given frequency.  */
     public GuitarString(double frequency) {
-        int CAPACITY = (int) Math.round(SR / frequency);
+        int capacity = (int) Math.round(SR / frequency);
         buffer = new ArrayDeque<Double>();
-        for (int i = 0; i < CAPACITY; i++) {
+        for (int i = 0; i < capacity; i++) {
             buffer.addLast(0.0);
         }
     }
