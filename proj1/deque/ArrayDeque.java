@@ -84,7 +84,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (size == tArray.length) {
             resize(size * 2);
         }
-        front = (front - 1 + tArray.length) % tArray.length;
+        front = (front - 1 + tArray.length) % tArray.length; // front - 1 may be negative
         tArray[front] = item;
         size++;
     }
@@ -95,7 +95,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             resize(size * 2);
         }
         tArray[rear] = item;
-        rear = (rear + 1) % tArray.length;
+        rear = (rear + 1) % tArray.length; // rear + 1 may be out of bound
         size++;
     }
 
