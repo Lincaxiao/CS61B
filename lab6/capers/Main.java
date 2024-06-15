@@ -56,7 +56,7 @@ public class Main {
             validateNumArgs("dog", args, 4);
             String name = args[1];
             String breed = args[2];
-            int age = Integer.getInteger(args[3]);
+            int age = Integer.parseInt(args[3]);
             CapersRepository.makeDog(name, breed, age);
             break;
         case "birthday":
