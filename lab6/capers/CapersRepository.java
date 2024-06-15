@@ -28,20 +28,24 @@ public class CapersRepository extends IOException{
      *    - dogs/ -- folder containing all the persistent data for dogs
      *    - story -- file containing the current story
      */
-    public static void setupPersistence() throws IOException {
-        File createMain = new File("capers",".capers");
-        if (!createMain.exists()) {
-            createMain.mkdir();
-        }
+    public static void setupPersistence() {
+        try {
+            File createMain = new File("capers", ".capers");
+            if (!createMain.exists()) {
+                createMain.mkdir();
+            }
 
-        createMain = Utils.join("capers",".capers", "dogs");
-        if (!createMain.exists()) {
-            createMain.mkdir();
-        }
+            createMain = Utils.join("capers", ".capers", "dogs");
+            if (!createMain.exists()) {
+                createMain.mkdir();
+            }
 
-        createMain = Utils.join("capers",".capers", "story");
-        if (!createMain.exists()) {
-            createMain.createNewFile();
+            createMain = Utils.join("capers", ".capers", "story");
+            if (!createMain.exists()) {
+                createMain.createNewFile();
+            }
+        } catch (IOException excp) {
+            System.out.println(excp);
         }
     }
 
@@ -51,7 +55,7 @@ public class CapersRepository extends IOException{
      * @param text String of the text to be appended to the story
      */
     public static void writeStory(String text) {
-        File outFile = Utils.join("capers",".capers", "story");
+        File outFile = Utils.join(CAPERS_FOLDER, "story");
         String originalText = readContentsAsString(outFile);
         String outText = originalText + text + "\n";
         Utils.writeContents(outFile, outText);
@@ -63,7 +67,7 @@ public class CapersRepository extends IOException{
      * three non-command arguments of args (name, breed, age).
      * Also prints out the dog's information using toString().
      */
-    public static void makeDog(String name, String breed, int age) throws IOException {
+    public static void makeDog(String name, String breed, int age) {
         Dog dog = new Dog(name, breed, age);
         dog.saveDog();
         System.out.println(dog.toString());
@@ -75,7 +79,7 @@ public class CapersRepository extends IOException{
      * Chooses dog to advance based on the first non-command argument of args.
      * @param name String name of the Dog whose birthday we're celebrating.
      */
-    public static void celebrateBirthday(String name) throws IOException {
+    public static void celebrateBirthday(String name) {
         Dog dog = Dog.fromFile(name);
         dog.haveBirthday();
         dog.saveDog();
