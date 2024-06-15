@@ -30,22 +30,21 @@ public class CapersRepository extends IOException{
      */
     public static void setupPersistence() {
         try {
-            File createMain = new File("capers", ".capers");
-            if (!createMain.exists()) {
-                createMain.mkdir();
+            if (!CAPERS_FOLDER.exists()) {
+                CAPERS_FOLDER.mkdir();
             }
 
-            createMain = Utils.join("capers", ".capers", "dogs");
-            if (!createMain.exists()) {
-                createMain.mkdir();
+            File dogsFolder = Utils.join(CAPERS_FOLDER, "dogs");
+            if (!dogsFolder.exists()) {
+                dogsFolder.mkdir();
             }
 
-            createMain = Utils.join("capers", ".capers", "story");
-            if (!createMain.exists()) {
-                createMain.createNewFile();
+            File storyFile = Utils.join(CAPERS_FOLDER, "story");
+            if (!storyFile.exists()) {
+                storyFile.createNewFile();
             }
         } catch (IOException excp) {
-            System.out.println(excp);
+            System.out.println(excp.getMessage());
         }
     }
 
