@@ -1,7 +1,5 @@
 package gitlet;
 
-import gitlet.Utils;
-
 import java.io.File;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
@@ -21,18 +19,14 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
                 checkOperands(args.length, 1);
                 Repository.gitInit();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
-                // If the command with the wrong number or format of operands
                 checkOperands(args.length, 2);
                 checkGitdirectory();
                 Repository.gitAdd(args[1]);
                 break;
-            // TODO: FILL THE REST IN
             case "commit":
                 checkOperands(args.length, 2);
                 Repository.gitCommit(args[1]);
@@ -108,6 +102,9 @@ public class Main {
         }
     }
 
+    /**
+     * Check if the current directory is a Gitlet directory.
+     */
     private static void checkGitdirectory() {
         File f = Utils.join(Repository.CWD, ".gitlit");
         if (!f.exists()) {
@@ -116,6 +113,11 @@ public class Main {
         }
     }
 
+    /**
+     * Check if the number of operands is correct.
+     * @param arrayNum
+     * @param num
+     */
     private static void checkOperands (int arrayNum, int num) {
         if (arrayNum != num) {
             Utils.message("Incorrect operands.");
