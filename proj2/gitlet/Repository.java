@@ -26,4 +26,72 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /* TODO: fill in the rest of this class. */
+    public static void gitInit() {
+        if (GITLET_DIR.exists()) {
+            message("A Gitlet version-control system already exists in the current directory.");
+            return;
+        }
+        GITLET_DIR.mkdir();
+        
+    }
+
+    public static void gitAdd(String fileName) {
+
+    }
+
+    public static void gitCommit(String message) {
+
+    }
+
+    public static void gitRm(String fileName) {
+
+    }
+
+    public static void gitLog() {
+
+    }
+
+    public static void gitGloballog() {
+
+    }
+
+    public static void gitFind(String fileName) {
+
+    }
+
+    public static void gitStatus() {
+
+    }
+
+    public static void gitCheckout(String[] args) {
+
+    }
+
+    public static void gitBranch(String name) {
+
+    }
+
+    public static void gitRmbranch(String name) {
+
+    }
+
+    public static void gitReset(String name) {
+
+    }
+
+    public static void gitMerge(String name) {
+
+    }
+
+    public static void gitAddremote(String name, String path) {
+
+    }
+
+    public static void gitRmremote(String name) {
+
+    }
+
+    public static void gitPush(String repoName, String branchName) {
+
+    }
 }
