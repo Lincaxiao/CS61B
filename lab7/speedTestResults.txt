@@ -1,0 +1,5 @@
+Enter # strings to insert into the maps: 9999
+class bstmap.ULLMap: 0.40 sec
+class bstmap.BSTMap: 0.54 sec
+Java's Built-in TreeMap: 0.01 sec
+Java's Built-in HashMap: 0.01 sec
