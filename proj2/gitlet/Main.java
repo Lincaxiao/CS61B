@@ -106,7 +106,7 @@ public class Main {
      * Check if the current directory is a Gitlet directory.
      */
     private static void checkGitdirectory() {
-        File f = Utils.join(Repository.CWD, ".gitlit");
+        File f = Utils.join(Repository.CWD, ".gitlet");
         if (!f.exists()) {
             Utils.message("Not in an initialized Gitlet directory.");
             System.exit(0);

@@ -1,8 +1,9 @@
 package gitlet;
 
 import java.io.*;
-import java.util.Date;
-import java.util.TreeMap;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Represents a gitlet commit object does at a high level.
@@ -20,7 +21,7 @@ public class Commit implements Serializable{
     private final String firstParent;
     private final String secondParent;
     /** The SHA-1 Hash of this Commit. */
-    private final String hashCode;
+    private String hashCode;
     /** The directory of the blobs of this Commit. */
     private final TreeMap<String, String> blobs;
 
@@ -36,7 +37,33 @@ public class Commit implements Serializable{
         hashCode = Utils.sha1(message, timesTamp.toString(), blobs.toString());
     }
 
+    public Commit(String massage, String firstParent) {
+        this.message = massage;
+        timesTamp = new Date();
+        this.firstParent = firstParent;
+        this.secondParent = null;
+        this.blobs = new TreeMap<>();
+        /* Now add/remove the blobs */
+        getUpdatedBlobs();
+        hashCode = Utils.sha1(message, timesTamp.toString(), blobs.toString());
+    }
 
+    private void getUpdatedBlobs() {
+        if (firstParent != null) {
+            Commit parent = Utils.readObject(Utils.join(COMMIT_DIR, firstParent), Commit.class);
+            blobs.putAll(parent.blobs);
+            /* now add/revise files appeared in the add stage */
+            File addStage = Repository.ADD_STAGE_DIR;
+            for (String file : Utils.plainFilenamesIn(addStage)) {
+                blobs.put(file, Utils.sha1(Utils.readContents(Utils.join(addStage, file))));
+            }
+            /* now remove files appeared in the remove stage */
+            File removeStage = Repository.REMOVE_STAGE_DIR;
+            for (String file : Utils.plainFilenamesIn(removeStage)) {
+                blobs.remove(file);
+            }
+        }
+    }
     public void saveCommit() {
         File commitFile = Utils.join(COMMIT_DIR, hashCode);
         Utils.writeObject(commitFile, this);
@@ -50,4 +77,22 @@ public class Commit implements Serializable{
         return blobs;
     }
 
+    public Commit getFirstParent() {
+        if (firstParent == null) {
+            return null;
+        }
+        File parentCommit = Utils.join(COMMIT_DIR, this.firstParent);
+        return Utils.readObject(parentCommit, Commit.class);
+    }
+    public void printCommit() {
+        System.out.println("===");
+        System.out.println("commit " + hashCode);
+        System.out.println("Date: " + dateToTimeStamp(timesTamp));
+        System.out.println(message);
+    }
+
+    private static String dateToTimeStamp(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+        return dateFormat.format(date);
+    }
 }

@@ -3,7 +3,9 @@ package gitlet;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Blob;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static gitlet.Utils.*;
 
@@ -84,8 +86,7 @@ public class Repository {
         // but the tree's key is the filename to the value of the SHA-1 hash.
 
         /* Check if the file exists in the current directory. */
-        String headPointer = Utils.readContentsAsString(HEAD_FILE);
-        String headCommitHash = Utils.readContentsAsString(join(HEADS_DIR, headPointer));
+        String headCommitHash = getHeadCommitHash();
         Commit headCommit = Utils.readObject(join(OBJECTS_DIR, headCommitHash), Commit.class);
         File file = new File(fileName);
         /* Check if the file exists in the current directory. */
@@ -108,32 +109,106 @@ public class Repository {
             }
         }
 
-        /* Check if the file already has existed in the add stage. */
+        /* If the file is not the same as the head commit, add it to the add stage. */
         File addStageFile = join(ADD_STAGE_DIR, fileName);
-        if (addStageFile.exists()) {
-            addStageFile.delete();
-        }
-
-        /* Copy the file to the add stage. */
-        Path sourcePath = file.toPath();
-        Path destinationPath = addStageFile.toPath();
-        try {
-            Files.copy(sourcePath, destinationPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        byte[] content = Utils.readContents(file);
+        Utils.writeContents(addStageFile, content);
     }
 
     public static void gitCommit(String message) {
+        /* Check if the add stage is empty. */
+        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty() && Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
+            message("No changes added to the commit.");
+            System.exit(0);
+        }
 
+        /* Check if the message is empty. */
+        if (message.isEmpty()) {
+            message("Please enter a commit message.");
+            System.exit(0);
+        }
+
+        /* Get the commit id of the head commit. */
+        String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
+        String headCommitHash = Utils.readContentsAsString(join(HEADS_DIR, currentBranch));
+        Commit newCommit = new Commit(message, headCommitHash);
+        newCommit.saveCommit();
+
+        /* Update the object directory. */
+        for (String file : plainFilenamesIn(ADD_STAGE_DIR)) {
+            File addStageFile = join(ADD_STAGE_DIR, file);
+            byte[] content = Utils.readContents(addStageFile);
+            Blobs newBlob = new Blobs(content);
+            newBlob.saveBlob();
+        }
+
+        /* Update the head pointer to the new commit. */
+        Utils.writeContents(join(HEADS_DIR, currentBranch), newCommit.getHashCode());
+
+        /* Clear the add stage and remove stage. */
+        clearStage(ADD_STAGE_DIR);
+        clearStage(REMOVE_STAGE_DIR);
+    }
+
+    /**
+     * Clear the stage directory.
+     * @param stageDir
+     */
+    private static void clearStage(File stageDir) {
+        for (String file : plainFilenamesIn(stageDir)) {
+            join(stageDir, file).delete();
+        }
     }
 
     public static void gitRm(String fileName) {
+        /* Check if the file is in the add stage. */
+        File addStageFile = join(ADD_STAGE_DIR, fileName);
+        if (addStageFile.exists()) {
+            addStageFile.delete();
+            return;
+        }
 
+        /* Check if the file is in the head commit. */
+        String headHash = getHeadCommitHash();
+        Commit headCommit = Utils.readObject(join(OBJECTS_DIR, headHash), Commit.class);
+
+        /* If the file is not in the head commit, print an error message and exit. */
+        if (!headCommit.getBlobs().containsKey(fileName)) {
+            message("No reason to remove the file.");
+            System.exit(0);
+        }
+
+        /* If the file is in the head commit, add it to the remove stage. */
+        File removeStageFile = join(REMOVE_STAGE_DIR, fileName);
+        /* Just create an empty file. */
+        try {
+            removeStageFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        /* Remove the file from the current directory, if it exists. */
+        File currentFile = Utils.join(CWD, fileName);
+        if (currentFile.exists()) {
+            currentFile.delete();
+        }
+    }
+
+    /**
+     * Get the head commit hash.
+     * @return
+     */
+    private static String getHeadCommitHash() {
+        String headPointer = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
+        return Utils.readContentsAsString(join(HEADS_DIR, headPointer));
     }
 
     public static void gitLog() {
-
+        String headCommitHash = getHeadCommitHash();
+        Commit currentCommit = Utils.readObject(join(OBJECTS_DIR, headCommitHash), Commit.class);
+        while (currentCommit != null) {
+            currentCommit.printCommit();
+            currentCommit = currentCommit.getFirstParent();
+        }
     }
 
     public static void gitGloballog() {
@@ -149,7 +224,58 @@ public class Repository {
     }
 
     public static void gitCheckout(String[] args) {
+        switch (args.length) {
+            case 2: {
+                // checkout [branch name]
+                break;
+            }
+            case 3: {
+                // checkout –- [filename]
 
+                /* Check if the operands are correct. */
+                if (!args[1].equals("--")) {
+                    message("Incorrect operands.");
+                    System.exit(0);
+                }
+
+                String fileName = args[2];
+                String headCommitHash = getHeadCommitHash();
+                Commit headCommit = Utils.readObject(join(OBJECTS_DIR, headCommitHash), Commit.class);
+
+                /* Check if the file exists in the head commit. */
+                if (!headCommit.getBlobs().containsKey(fileName)) {
+                    message("File does not exist in that commit.");
+                    System.exit(0);
+                }
+
+                /* Restore the file to the current directory. */
+                File file = join(CWD, fileName);
+                byte[] content = Utils.readObject
+                        (join(OBJECTS_DIR, headCommit.getBlobs().get(fileName)), Blobs.class).getContent();
+                Utils.writeContents(file, content);
+                break;
+            }
+            case 4: {
+                // checkout [commit id] –- [filename]
+                String fileName = args[3];
+                Commit outCommit = Utils.readObject(join(OBJECTS_DIR, args[1]), Commit.class);
+
+                /* Check if the file exists in the out commit. */
+                if (!outCommit.getBlobs().containsKey(fileName)) {
+                    message("File does not exist in that commit.");
+                    System.exit(0);
+                }
+
+                File file = join(CWD, fileName);
+                byte[] content = Utils.readContents(join(OBJECTS_DIR, outCommit.getBlobs().get(fileName)));
+                Utils.writeContents(file, content);
+                break;
+            }
+            default: {
+                message("Incorrect operands.");
+                System.exit(0);
+            }
+        }
     }
 
     public static void gitBranch(String name) {
