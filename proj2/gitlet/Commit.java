@@ -9,7 +9,7 @@ import java.util.*;
  * Represents a gitlet commit object does at a high level.
  *  @Author  Zhang, Xiaochen
  */
-public class Commit implements Serializable{
+public class Commit implements Serializable {
 
     /** The directory of all the commits. */
     private final static  File COMMIT_DIR = Utils.join(Repository.GITLET_DIR, "objects");

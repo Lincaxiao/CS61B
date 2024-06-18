@@ -7,7 +7,7 @@ import java.util.Arrays;
 /**
  * This class is used to represent the detailed information of a single blob/file.
  */
-public class Blobs implements Serializable{
+public class Blobs implements Serializable {
 
     /** The directory of all the blobs. */
     public static final File BLOB_DIR = Utils.join(Repository.GITLET_DIR, "objects");

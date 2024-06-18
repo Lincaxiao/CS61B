@@ -1,12 +1,6 @@
 package gitlet;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Blob;
-import java.util.Arrays;
-import java.util.Objects;
-
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
@@ -83,9 +77,6 @@ public class Repository {
     }
 
     public static void gitAdd(String fileName) {
-        // TODO: 将文件的当前版本复制到暂存区
-        // TODO: 如果当前工作版本的文件与当前提交中的版本相同，则不将其暂存添加，并从暂存区中删除它（如果它已经存在）
-        // TODO: 如果文件以存在于暂存区中，则更新暂存区中的文件，以便它代表当前工作版本的最新版本
         // NOTE: In objects directory, the filename is the SHA-1 hash of the file,
         // but the tree's key is the filename to the value of the SHA-1 hash.
 
