@@ -89,6 +89,7 @@ public class Commit implements Serializable{
         System.out.println("commit " + hashCode);
         System.out.println("Date: " + dateToTimeStamp(timesTamp));
         System.out.println(message);
+        System.out.println();
     }
 
     private static String dateToTimeStamp(Date date) {
