@@ -67,6 +67,9 @@ public class Commit implements Serializable{
     public void saveCommit() {
         File commitFile = Utils.join(COMMIT_DIR, hashCode);
         Utils.writeObject(commitFile, this);
+        /* bad patch for global log :( */
+        commitFile = Utils.join(COMMIT_DIR, "commits", hashCode);
+        Utils.writeObject(commitFile, this);
     }
 
     public String  getHashCode() {
@@ -75,6 +78,10 @@ public class Commit implements Serializable{
 
     public TreeMap<String, String> getBlobs() {
         return blobs;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public Commit getFirstParent() {
