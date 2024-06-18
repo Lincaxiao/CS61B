@@ -259,15 +259,21 @@ public class Repository {
                 // checkout [commit id] –- [filename]
                 String fileName = args[3];
                 Commit outCommit = Utils.readObject(join(OBJECTS_DIR, args[1]), Commit.class);
+                /* Check if the operands are correct. */
+                if (!args[2].equals("--")) {
+                    message("Incorrect operands.");
+                    System.exit(0);
+                }
 
                 /* Check if the file exists in the out commit. */
                 if (!outCommit.getBlobs().containsKey(fileName)) {
                     message("File does not exist in that commit.");
                     System.exit(0);
                 }
-
+                /* Restore the file to the current directory. */
                 File file = join(CWD, fileName);
-                byte[] content = Utils.readContents(join(OBJECTS_DIR, outCommit.getBlobs().get(fileName)));
+                byte[] content = Utils.readObject
+                        (join(OBJECTS_DIR, outCommit.getBlobs().get(fileName)), Blobs.class).getContent();
                 Utils.writeContents(file, content);
                 break;
             }
