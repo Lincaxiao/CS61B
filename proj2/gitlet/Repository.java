@@ -118,7 +118,8 @@ public class Repository {
 
     public static void gitCommit(String message) {
         /* Check if the add stage is empty. */
-        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty() && Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
+        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty() &&
+                Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
             message("No changes added to the commit.");
             System.exit(0);
         }
@@ -275,98 +276,15 @@ public class Repository {
     public static void gitCheckout(String[] args) {
         switch (args.length) {
             case 2: {
-                // checkout [branch name]
-                String branchName = args[1];
-                /* Check if the branch exists. */
-                if (!plainFilenamesIn(HEADS_DIR).contains(branchName)) {
-                    message("No such branch exists.");
-                    System.exit(0);
-                }
-                /* Check if the branch is the current branch. */
-                String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
-                if (currentBranch.equals(branchName)) {
-                    message("No need to checkout the current branch.");
-                    System.exit(0);
-                }
-                /*
-                 * Check if a working file is untracked in the current
-                 * branch and would be overwritten by the checkout
-                 */
-                Commit headCommit = Utils.readObject(join(OBJECTS_DIR, getHeadCommitHash()), Commit.class);
-                for (String file : plainFilenamesIn(CWD)) {
-                    if (!headCommit.getBlobs().containsKey(file)) {
-                        message("There is an untracked file in the way; delete it, or add and commit it first.");
-                        System.exit(0);
-                    }
-                }
-                /* Update the head pointer to the new branch. */
-                Utils.writeContents(HEAD_FILE, new Head(branchName));
-                /* Restore the files in the new branch to the current directory. */
-                String newHeadCommitHash = Utils.readContentsAsString(join(HEADS_DIR, branchName));
-                Commit newHeadCommit = Utils.readObject(join(OBJECTS_DIR, newHeadCommitHash), Commit.class);
-                for (String file : plainFilenamesIn(CWD)) {
-                    if (!newHeadCommit.getBlobs().containsKey(file)) {
-                        Utils.join(CWD, file).delete();
-                    }
-                }
-                for (String file : newHeadCommit.getBlobs().keySet()) {
-                    File newFile = Utils.join(CWD, file);
-                    Blobs blob = Utils.readObject(join(OBJECTS_DIR, newHeadCommit.getBlobs().get(file)), Blobs.class);
-                    Utils.writeContents(newFile, blob.getContent());
-                }
+                checkOutwithtwooprands(args);
                 break;
             }
             case 3: {
-                // checkout –- [filename]
-
-                /* Check if the operands are correct. */
-                if (!args[1].equals("--")) {
-                    message("Incorrect operands.");
-                    System.exit(0);
-                }
-
-                String fileName = args[2];
-                String headCommitHash = getHeadCommitHash();
-                Commit headCommit = Utils.readObject(join(OBJECTS_DIR, headCommitHash), Commit.class);
-
-                /* Check if the file exists in the head commit. */
-                if (!headCommit.getBlobs().containsKey(fileName)) {
-                    message("File does not exist in that commit.");
-                    System.exit(0);
-                }
-
-                /* Restore the file to the current directory. */
-                File file = join(CWD, fileName);
-                byte[] content = Utils.readObject
-                        (join(OBJECTS_DIR, headCommit.getBlobs().get(fileName)), Blobs.class).getContent();
-                Utils.writeContents(file, content);
+                checkOutwiththreeoprands(args);
                 break;
             }
             case 4: {
-                // checkout [commit id] –- [filename]
-                String fileName = args[3];
-                /* Check if the commit id exists. */
-                if (!plainFilenamesIn(COMMITS_DIR).contains(args[1])) {
-                    message("No commit with that id exists.");
-                    System.exit(0);
-                }
-                Commit outCommit = Utils.readObject(join(OBJECTS_DIR, args[1]), Commit.class);
-                /* Check if the operands are correct. */
-                if (!args[2].equals("--")) {
-                    message("Incorrect operands.");
-                    System.exit(0);
-                }
-
-                /* Check if the file exists in the out commit. */
-                if (!outCommit.getBlobs().containsKey(fileName)) {
-                    message("File does not exist in that commit.");
-                    System.exit(0);
-                }
-                /* Restore the file to the current directory. */
-                File file = join(CWD, fileName);
-                byte[] content = Utils.readObject
-                        (join(OBJECTS_DIR, outCommit.getBlobs().get(fileName)), Blobs.class).getContent();
-                Utils.writeContents(file, content);
+                checkOutwithfouroprands(args);
                 break;
             }
             default: {
@@ -376,15 +294,156 @@ public class Repository {
         }
     }
 
-    public static void gitBranch(String name) {
+    private static void checkOutwithtwooprands(String[] args) {
+        // checkout [branch name]
+        String branchName = args[1];
+        /* Check if the branch exists. */
+        if (!plainFilenamesIn(HEADS_DIR).contains(branchName)) {
+            message("No such branch exists.");
+            System.exit(0);
+        }
+        /* Check if the branch is the current branch. */
+        String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
+        if (currentBranch.equals(branchName)) {
+            message("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        /*
+         * Check if a working file is untracked in the current
+         * branch and would be overwritten by the checkout
+         */
+        Commit headCommit = Utils.readObject
+                (join(OBJECTS_DIR, getHeadCommitHash()), Commit.class);
+        for (String file : plainFilenamesIn(CWD)) {
+            if (!headCommit.getBlobs().containsKey(file)) {
+                message("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        /* Update the head pointer to the new branch. */
+        Head head = new Head(branchName);
+        Utils.writeObject(HEAD_FILE, head);
+        /* Restore the files in the new branch to the current directory. */
+        String newHeadCommitHash = Utils.readContentsAsString(join(HEADS_DIR, branchName));
+        Commit newHeadCommit = Utils.readObject
+                (join(OBJECTS_DIR, newHeadCommitHash), Commit.class);
+        for (String file : plainFilenamesIn(CWD)) {
+            if (!newHeadCommit.getBlobs().containsKey(file)) {
+                Utils.join(CWD, file).delete();
+            }
+        }
+        for (String file : newHeadCommit.getBlobs().keySet()) {
+            File newFile = Utils.join(CWD, file);
+            Blobs blob = Utils.readObject(join(OBJECTS_DIR,
+                    newHeadCommit.getBlobs().get(file)), Blobs.class);
+            Utils.writeContents(newFile, blob.getContent());
+        }
+    }
 
+    private static void checkOutwiththreeoprands(String[] args) {
+        // checkout –- [filename]
+        /* Check if the operands are correct. */
+        if (!args[1].equals("--")) {
+            message("Incorrect operands.");
+            System.exit(0);
+        }
+
+        String fileName = args[2];
+        String headCommitHash = getHeadCommitHash();
+        Commit headCommit = Utils.readObject(join(OBJECTS_DIR, headCommitHash), Commit.class);
+
+        /* Check if the file exists in the head commit. */
+        if (!headCommit.getBlobs().containsKey(fileName)) {
+            message("File does not exist in that commit.");
+            System.exit(0);
+        }
+
+        /* Restore the file to the current directory. */
+        File file = join(CWD, fileName);
+        String blobHash = headCommit.getBlobs().get(fileName);
+        Blobs blob = Utils.readObject(join(OBJECTS_DIR, blobHash), Blobs.class);
+        Utils.writeContents(file, blob.getContent());
+    }
+
+    private static void checkOutwithfouroprands(String[] args) {
+        // checkout [commit id] –- [filename]
+        String fileName = args[3];
+        /* Check if the commit id exists. */
+        if (!plainFilenamesIn(COMMITS_DIR).contains(args[1])) {
+            message("No commit with that id exists.");
+            System.exit(0);
+        }
+        Commit outCommit = Utils.readObject(join(OBJECTS_DIR, args[1]), Commit.class);
+        /* Check if the operands are correct. */
+        if (!args[2].equals("--")) {
+            message("Incorrect operands.");
+            System.exit(0);
+        }
+
+        /* Check if the file exists in the out commit. */
+        if (!outCommit.getBlobs().containsKey(fileName)) {
+            message("File does not exist in that commit.");
+            System.exit(0);
+        }
+        /* Restore the file to the current directory. */
+        File file = join(CWD, fileName);
+        byte[] content = Utils.readObject
+                (join(OBJECTS_DIR, outCommit.getBlobs().get(fileName)), Blobs.class).getContent();
+        Utils.writeContents(file, content);
+    }
+
+    public static void gitBranch(String name) {
+        /* Check if the branch exists. */
+        if (plainFilenamesIn(HEADS_DIR).contains(name)) {
+            message("A branch with that name already exists.");
+            System.exit(0);
+        }
+        /* Create a new branch and set the head pointer to it. */
+        Utils.writeContents(join(HEADS_DIR, name), getHeadCommitHash());
     }
 
     public static void gitRmbranch(String name) {
-
+        /* Check if the branch exists. */
+        if (!plainFilenamesIn(HEADS_DIR).contains(name)) {
+            message("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        /* Check if the branch is the current branch. */
+        String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
+        if (currentBranch.equals(name)) {
+            message("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        /* Remove the branch. */
+        join(HEADS_DIR, name).delete();
     }
 
-    public static void gitReset(String name) {
+    public static void gitReset(String commitId) {
+        /* Check if the commit id exists. */
+        if (!plainFilenamesIn(COMMITS_DIR).contains(commitId)) {
+            message("No commit with that id exists.");
+            System.exit(0);
+        }
+        /* Get the commit. */
+        Commit resetCommit = Utils.readObject(join(OBJECTS_DIR, commitId), Commit.class);
+        /* Update the head pointer to the commit. */
+        String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
+        Utils.writeContents(join(HEADS_DIR, currentBranch), commitId);
+        /* Restore the files to the current directory. */
+        for (String file : plainFilenamesIn(CWD)) {
+            if (!resetCommit.getBlobs().containsKey(file)) {
+                Utils.join(CWD, file).delete();
+            }
+        }
+        for (String file : resetCommit.getBlobs().keySet()) {
+            File newFile = Utils.join(CWD, file);
+            Blobs blob = Utils.readObject
+                    (join(OBJECTS_DIR, resetCommit.getBlobs().get(file)), Blobs.class);
+            Utils.writeContents(newFile, blob.getContent());
+        }
+
+
 
     }
 

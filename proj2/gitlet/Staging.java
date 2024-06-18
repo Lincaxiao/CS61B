@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.util.List;
 
 public class Staging {
     /** Staging files' directory */

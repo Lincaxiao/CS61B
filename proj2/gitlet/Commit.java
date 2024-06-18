@@ -12,7 +12,7 @@ import java.util.*;
 public class Commit implements Serializable {
 
     /** The directory of all the commits. */
-    private final static  File COMMIT_DIR = Utils.join(Repository.GITLET_DIR, "objects");
+    public static File COMMIT_DIR = Utils.join(Repository.GITLET_DIR, "objects");
     /** The message of this Commit. */
     private final String message;
     /** The time of this Commit. */

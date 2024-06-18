@@ -1,8 +1,6 @@
 package gitlet;
 
 import java.io.*;
-import java.util.Arrays;
-
 
 /**
  * This class is used to represent the detailed information of a single blob/file.
