@@ -12,7 +12,7 @@ import java.util.*;
 public class Commit implements Serializable {
 
     /** The directory of all the commits. */
-    public static File COMMIT_DIR = Utils.join(Repository.GITLET_DIR, "objects");
+    private static File COMMIT_DIR = Utils.join(Repository.GITLET_DIR, "objects");
     /** The message of this Commit. */
     private final String message;
     /** The time of this Commit. */
@@ -91,6 +91,15 @@ public class Commit implements Serializable {
         File parentCommit = Utils.join(COMMIT_DIR, this.firstParent);
         return Utils.readObject(parentCommit, Commit.class);
     }
+
+    public Commit getSecondParent() {
+        if (secondParent == null) {
+            return null;
+        }
+        File parentCommit = Utils.join(COMMIT_DIR, this.secondParent);
+        return Utils.readObject(parentCommit, Commit.class);
+    }
+
     public void printCommit() {
         System.out.println("===");
         System.out.println("commit " + hashCode);

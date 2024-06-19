@@ -126,8 +126,8 @@ public class Repository {
 
     public static void gitCommit(String message) {
         /* Check if the add stage is empty. */
-        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty() &&
-                Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
+        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty()
+                && Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
             message("No changes added to the commit.");
             System.exit(0);
         }
@@ -328,9 +328,10 @@ public class Repository {
         Commit headCommit = Utils.readObject
                 (join(OBJECTS_DIR, getHeadCommitHash()), Commit.class);
         for (String file : plainFilenamesIn(CWD)) {
-            if (!headCommit.getBlobs().containsKey(file)) {
-                message("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+            if (!headCommit.getBlobs().containsKey(file)
+                    && !plainFilenamesIn(ADD_STAGE_DIR).contains(file)) {
+                message("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -433,6 +434,9 @@ public class Repository {
         /* Update the gitlet file. */
         Gitlet gitlet = Gitlet.load();
         gitlet.createBranch(name);
+        Branch currentBranch = gitlet.getCurrentBranch();
+        Branch newBranch = gitlet.getBranch(name);
+        newBranch.getMergedBranches().addAll(currentBranch.getMergedBranches());
         gitlet.save();
     }
 
@@ -471,9 +475,10 @@ public class Repository {
         Commit headCommit = Utils.readObject
                 (join(OBJECTS_DIR, getHeadCommitHash()), Commit.class);
         for (String file : plainFilenamesIn(CWD)) {
-            if (!headCommit.getBlobs().containsKey(file)) {
-                message("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+            if (!headCommit.getBlobs().containsKey(file)
+                    && !plainFilenamesIn(ADD_STAGE_DIR).contains(file)) {
+                message("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -513,8 +518,8 @@ public class Repository {
      */
     private static String findSplitPointId(String branchName) {
         /* Check if the staging area is clean. */
-        if (!plainFilenamesIn(ADD_STAGE_DIR).isEmpty() ||
-                !plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
+        if (!plainFilenamesIn(ADD_STAGE_DIR).isEmpty()
+                || !plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
             message("You have uncommitted changes.");
             System.exit(0);
         }
@@ -531,10 +536,7 @@ public class Repository {
             message("Cannot merge a branch with itself.");
             System.exit(0);
         }
-        String givenCommitId = Utils.readContentsAsString(join(HEADS_DIR, branchName));
         /* Find the split point. */
-        Commit currentCommit = Utils.readObject(join(OBJECTS_DIR, currentCommitId), Commit.class);
-        Commit givenCommit = Utils.readObject(join(OBJECTS_DIR, givenCommitId), Commit.class);
         Gitlet gitlet = Gitlet.load();
         Commit splitPoint = gitlet.findSplitPoint(currentBranch, branchName);
         return splitPoint.getHashCode();
@@ -575,9 +577,10 @@ public class Repository {
         List<String> conflictFiles = new ArrayList<>();
         /* Revise the files in the current directory. */
         for (String file : plainFilenamesIn(CWD)) {
-            if (!currentCommit.getBlobs().containsKey(file)) {
-                message("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+            if (!currentCommit.getBlobs().containsKey(file)
+                    && !plainFilenamesIn(ADD_STAGE_DIR).contains(file)) {
+                message("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -628,9 +631,11 @@ public class Repository {
                 processConflict(file, currentCommit, givenCommit);
             }
         }
-        gitCommitCaseMerge("Merged " + branchName + " into " + currentBranchName + ".", givenCommitId);
+        gitCommitCaseMerge("Merged " + branchName + " into "
+                + currentBranchName + ".", givenCommitId);
+        /* Update the gitlet file. */
         Gitlet gitlet = Gitlet.load();
-        gitlet.removeBranch(branchName);
+        gitlet.getCurrentBranch().addMergedBranch(branchName);
         gitlet.save();
     }
 
@@ -668,8 +673,8 @@ public class Repository {
 
     public static void gitCommitCaseMerge(String message, String givenCommitId) {
         /* Check if the add stage is empty. */
-        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty() &&
-                Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
+        if (plainFilenamesIn(ADD_STAGE_DIR).isEmpty()
+                && Utils.plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
             message("No changes added to the commit.");
             System.exit(0);
         }
