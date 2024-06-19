@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * Represents a gitlet commit object does at a high level.
- *  @Author  Zhang, Xiaochen
+ *  @Author Zhang, Xiaochen
  */
 public class Commit implements Serializable {
 
@@ -19,7 +19,7 @@ public class Commit implements Serializable {
     private final Date timesTamp;
     /** The parent of this Commit. */
     private final String firstParent;
-    private final String secondParent;
+    private String secondParent;
     /** The SHA-1 Hash of this Commit. */
     private String hashCode;
     /** The directory of the blobs of this Commit. */
@@ -102,5 +102,13 @@ public class Commit implements Serializable {
     private static String dateToTimeStamp(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
         return dateFormat.format(date);
+    }
+
+    public Date getTimestamp() {
+        return timesTamp;
+    }
+
+    public void setSecondParent(String secondParent) {
+        this.secondParent = secondParent;
     }
 }
