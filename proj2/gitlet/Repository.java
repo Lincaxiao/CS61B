@@ -2,7 +2,7 @@ package gitlet;
 
 import java.io.*;
 import java.util.*;
-
+import gitlet.Gitlet.*;
 import static gitlet.Utils.*;
 
 /** Represents a gitlet repository.
