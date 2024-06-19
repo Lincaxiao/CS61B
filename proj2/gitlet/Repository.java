@@ -686,6 +686,9 @@ public class Repository {
                 processConflict(file, currentCommit, givenCommit);
             }
         }
+        if (branchName.contains("_")) {
+            branchName = branchName.replace("_", "/");
+        }
         gitCommitCaseMerge("Merged " + branchName + " into "
                 + currentBranchName + ".", givenCommitId);
         /* Update the gitlet file. */
@@ -837,7 +840,8 @@ public class Repository {
                 }
                 /* Update the commit directory. */
                 File commitFile = Utils.join(remote.getRemoteDir(), "objects", "commits");
-                File objectFile = Utils.join(remote.getRemoteDir(), "objects", commit.getHashCode());
+                File objectFile = Utils.join(remote.getRemoteDir(), "objects");
+                objectFile = Utils.join(objectFile, commit.getHashCode());
                 commitFile = Utils.join(commitFile, commit.getHashCode());
                 Utils.writeObject(commitFile, commit);
                 Utils.writeObject(objectFile, commit);

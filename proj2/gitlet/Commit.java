@@ -18,7 +18,7 @@ public class Commit implements Serializable {
     /** The time of this Commit. */
     private final Date timesTamp;
     /** The parent of this Commit. */
-    private final String firstParent;
+    private String firstParent;
     private String secondParent;
     /** The SHA-1 Hash of this Commit. */
     private String hashCode;
@@ -82,6 +82,10 @@ public class Commit implements Serializable {
 
     public String getMessage() {
         return message;
+    }
+
+    public void setFirstParent(String firstParent) {
+        this.firstParent = firstParent;
     }
 
     public Commit getFirstParent() {
