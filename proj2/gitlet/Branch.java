@@ -5,6 +5,7 @@ import java.util.*;
 
 public class Branch implements Serializable {
     private String name;
+    /** The commits of the branch. */
     private List<Commit> commits;
     private List<String> mergedBranches;
 

@@ -95,6 +95,16 @@ public class Main {
                 checkOperands(args.length, 3);
                 Repository.gitPush(args[1], args[2]);
                 break;
+            case "fetch":
+                checkGitdirectory();
+                checkOperands(args.length, 3);
+                Repository.gitFetch(args[1], args[2]);
+                break;
+            case "pull":
+                checkGitdirectory();
+                checkOperands(args.length, 3);
+                Repository.gitPull(args[1], args[2]);
+                break;
             default:
                 checkGitdirectory();
                 Utils.message("No command with that name exists.");

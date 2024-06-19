@@ -285,9 +285,39 @@ public class Repository {
 
         /* Print the modifications area. */
         System.out.println("\n=== Modifications Not Staged For Commit ===");
+        /* Print the modified files unstaged for commit and their status. */
+        Commit headCommit = Utils.readObject
+                (join(OBJECTS_DIR, getHeadCommitHash()), Commit.class);
+
+        for (String file : plainFilenamesIn(CWD)) {
+            /* If the file is modified in the working directory, but not staged. */
+            /* This time the blobs have the file name as the key, but the hash-value is different. */
+            if (headCommit.getBlobs().containsKey(file)) {
+                byte[] content = Utils.readContents(join(CWD, file));
+                String blobId = Utils.sha1(content);
+                if (!headCommit.getBlobs().get(file).equals(blobId)) {
+                    System.out.println(file + " (modified)");
+                }
+            }
+        }
+        /* If the file is deleted in the working directory, but not staged. */
+        for (String file : headCommit.getBlobs().keySet()) {
+            if (!Utils.join(CWD, file).exists()
+                    && !plainFilenamesIn(REMOVE_STAGE_DIR).contains(file)) {
+                System.out.println(file + " (deleted)");
+            }
+        }
+
 
         /* Print the untracked area. */
         System.out.println("\n=== Untracked Files ===");
+        /* Print the untracked files. */
+        for (String file : plainFilenamesIn(CWD)) {
+            if (!headCommit.getBlobs().containsKey(file)
+                    && !plainFilenamesIn(ADD_STAGE_DIR).contains(file)) {
+                System.out.println(file);
+            }
+        }
     }
 
     public static void gitCheckout(String[] args) {
@@ -726,11 +756,9 @@ public class Repository {
             System.exit(0);
         }
 
-        /* Convert forward slashes to system-specific file separator */
-        String correctedPath = path.replace("/", File.separator);
-
-        /* Create a new remote. */
-        Utils.writeContents(remoteFile, correctedPath);
+        /* Add the remote. */
+        Remote remote = new Remote(name, path);
+        Utils.writeObject(remoteFile, remote);
     }
 
     public static void gitRmremote(String name) {
@@ -749,9 +777,122 @@ public class Repository {
     public static void gitPush(String repoName, String branchName) {
         /* Check if the remote name exists. */
         File remoteFile = Utils.join(REMOTE_DIR, repoName);
-        if (!remoteFile.exists()) {
+        Remote remote = Utils.readObject(remoteFile, Remote.class);
+
+        if (!remote.getRemoteDir().exists()) {
             message("Remote directory not found.");
             System.exit(0);
         }
+
+        /* check if the remote head in the branch of current local head */
+        File remoteHeadFile = Utils.join(remote.getRemoteDir(), "refs", "heads", branchName);
+        String remoteHeadId = Utils.readContentsAsString(remoteHeadFile);
+        Gitlet gitlet = Gitlet.load();
+        Branch currentBranch = gitlet.getCurrentBranch();
+        List<Commit> currentCommits = currentBranch.getCommits();
+        if (!checkRemoteHead(remoteHeadId, currentCommits)) {
+            message("Please pull down remote changes before pushing.");
+            System.exit(0);
+        }
+
+        /* Update the remote head to the current head. */
+        File localHeadFile = Utils.join(HEADS_DIR, branchName);
+        Utils.writeContents(remoteHeadFile, Utils.readContentsAsString(localHeadFile));
+
+        /* Update the remote gitlet file. */
+        File remoteGitletFile = Utils.join(remote.getRemoteDir(), "gitlet");
+        Gitlet remoteGitlet = Utils.readObject(remoteGitletFile, Gitlet.class);
+        boolean isFuture = false;
+        for (Commit commit : currentCommits) {
+            if (isFuture) {
+                remoteGitlet.addCommit(commit);
+                /* Update the object directory. */
+                for (String file : commit.getBlobs().keySet()) {
+                    File blobFile = Utils.join(OBJECTS_DIR, commit.getBlobs().get(file));
+                    Blobs blob = Utils.readObject(blobFile, Blobs.class);
+                    File remoteBlobFile = Utils.join(remote.getRemoteDir(), "objects");
+                    remoteBlobFile = Utils.join(remoteBlobFile, commit.getBlobs().get(file));
+                    Utils.writeObject(remoteBlobFile, blob);
+                }
+                /* Update the commit directory. */
+                File commitFile = Utils.join(remote.getRemoteDir(), "objects", "commits");
+                File objectFile = Utils.join(OBJECTS_DIR, commit.getHashCode());
+                commitFile = Utils.join(commitFile, commit.getHashCode());
+                Utils.writeObject(commitFile, commit);
+                Utils.writeObject(objectFile, commit);
+            }
+            if (commit.getHashCode().equals(remoteHeadId)) {
+                isFuture = true;
+            }
+        }
+        /* Update the remote branch in the remote gitlet file. */
+        Utils.writeObject(remoteGitletFile, remoteGitlet);
+    }
+
+    private static boolean checkRemoteHead(String remoteHeadId, List<Commit> currentCommits) {
+        for (Commit commit : currentCommits) {
+            if (commit.getHashCode().equals(remoteHeadId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void gitFetch(String repoName, String branchName) {
+        /* Check if the remote name exists. */
+        File remoteFile = Utils.join(REMOTE_DIR, repoName);
+        Remote remote = Utils.readObject(remoteFile, Remote.class);
+        String localBranchName = repoName + "/" + branchName;
+
+        if (!remote.getRemoteDir().exists()) {
+            message("Remote directory not found.");
+            System.exit(0);
+        }
+
+        /* Check if the remote branch exists. */
+        File remoteHeadFile = Utils.join(remote.getRemoteDir(), "refs", "heads", branchName);
+        if (!remoteHeadFile.exists()) {
+            message("That remote does not have that branch.");
+            System.exit(0);
+        }
+
+        /* Update the local gitlet file. */
+        File localHeadFile = Utils.join(HEADS_DIR, branchName);
+        Utils.writeContents(localHeadFile, Utils.readContentsAsString(remoteHeadFile));
+
+        Gitlet gitlet = Gitlet.load();
+        File remoteGitletFile = Utils.join(remote.getRemoteDir(), "gitlet");
+        Gitlet remoteGitlet = Utils.readObject(remoteGitletFile, Gitlet.class);
+        if (gitlet.getBranch(branchName) == null) {
+            gitlet.createBranch(localBranchName);
+        }
+        List<Commit> currentCommits = gitlet.getCurrentBranch().getCommits();
+        List<Commit> remoteCommits = remoteGitlet.getBranch(branchName).getCommits();
+        currentCommits.clear();
+        currentCommits.addAll(remoteCommits);
+
+        /* Copy the commits and blobs from the remote gitlet file to the local gitlet file. */
+        for (Commit commit : remoteGitlet.getBranch(branchName).getCommits()) {
+            File commitFile = Utils.join(OBJECTS_DIR, commit.getHashCode());
+            Utils.writeObject(commitFile, commit);
+            commitFile = Utils.join(COMMITS_DIR, commit.getHashCode());
+            Utils.writeObject(commitFile, commit);
+            for (String file : commit.getBlobs().keySet()) {
+                File remoteBlobFile = Utils.join(remote.getRemoteDir(), "objects");
+                remoteBlobFile = Utils.join(remoteBlobFile, commit.getBlobs().get(file));
+                File blobFile = Utils.join(OBJECTS_DIR, commit.getBlobs().get(file));
+                Blobs blob = Utils.readObject(remoteBlobFile, Blobs.class);
+                Utils.writeObject(blobFile, blob);
+            }
+        }
+
+        /* Update the head/branch pointer to the new commit. */
+        File branchFile = Utils.join(HEADS_DIR,  localBranchName);
+        Utils.writeContents(branchFile, Utils.readContentsAsString(remoteHeadFile));
+    }
+
+    public static void gitPull(String repoName, String branchName) {
+        gitFetch(repoName, branchName);
+        gitMerge(repoName + "/" + branchName);
     }
 }
