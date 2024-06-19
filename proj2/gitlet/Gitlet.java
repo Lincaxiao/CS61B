@@ -27,7 +27,7 @@ public class Gitlet implements Serializable {
     public void checkoutBranch(String branchName) {
         if (!branches.containsKey(branchName)) {
             throw new IllegalArgumentException
-                ("A branch with that name does not exist.");
+            ("A branch with that name does not exist.");
         }
         currentBranchName = branchName;
     }
@@ -39,27 +39,7 @@ public class Gitlet implements Serializable {
     public Commit findSplitPoint(String branch1, String branch2) {
         Branch b1 = branches.get(branch1);
         Branch b2 = branches.get(branch2);
-        if (b1 == null || b2 == null) {
-            throw new IllegalArgumentException("Branch does not exist.");
-        }
-
-        List<Commit> commits1 = b1.getCommits();
-        List<Commit> commits2 = b2.getCommits();
-
-        Set<String> commitIds1 = new HashSet<>();
-        for (Commit commit : commits1) {
-            commitIds1.add(commit.getHashCode());
-        }
-
-        Commit splitPoint = null;
-        for (Commit commit : commits2) {
-            if (commitIds1.contains(commit.getHashCode())) {
-                if (splitPoint == null || commit.getTimestamp().
-                        after(splitPoint.getTimestamp())) {
-                    splitPoint = commit;
-                }
-            }
-        }
+        Commit splitPoint = findSplitHelper(branch1, branch2);
         Set<Commit> mergedBranchSet = new HashSet<>();
         for (String branch : b1.getMergedBranches()) {
             Commit mergedSplitCommit = findSplitHelper(branch, branch2);

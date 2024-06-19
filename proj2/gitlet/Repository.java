@@ -35,6 +35,8 @@ public class Repository {
     public static final File ADD_STAGE_DIR = join(GITLET_DIR, "addstage");
     /** The remove stage directory. */
     public static final File REMOVE_STAGE_DIR = join(GITLET_DIR, "removestage");
+    /** The remote directory. */
+    public static final File REMOTE_DIR = join(GITLET_DIR, "remotes");
 
     /**
      * The structure of the .gitlet directory:
@@ -51,6 +53,7 @@ public class Repository {
      *      |--HEAD.file
      *      |--addstage
      *      |--removestage
+     *      |--remotes
      * In objects directory, files' name: files' hash
      * In add/remove stage directory, files' name: original files
      * In refs/heads directory, files' name: branches' name, files' content: commits' hash
@@ -68,6 +71,7 @@ public class Repository {
         HEADS_DIR.mkdir();
         OBJECTS_DIR.mkdir();
         COMMITS_DIR.mkdir();
+        REMOTE_DIR.mkdir();
         /* Create the master branch and set the HEAD to it. */
         Commit initialCommit = new Commit();
         initialCommit.saveCommit();
@@ -712,15 +716,42 @@ public class Repository {
         clearStage(ADD_STAGE_DIR);
         clearStage(REMOVE_STAGE_DIR);
     }
-    public static void gitAddremote(String name, String path) {
 
+    public static void gitAddremote(String name, String path) {
+        File remoteFile = Utils.join(REMOTE_DIR, name);
+
+        /* Check if the remote name exists. */
+        if (remoteFile.exists()) {
+            message("A remote with that name already exists.");
+            System.exit(0);
+        }
+
+        /* Convert forward slashes to system-specific file separator */
+        String correctedPath = path.replace("/", File.separator);
+
+        /* Create a new remote. */
+        Utils.writeContents(remoteFile, correctedPath);
     }
 
     public static void gitRmremote(String name) {
+        File remoteFile = Utils.join(REMOTE_DIR, name);
 
+        /* Check if the remote name exists. */
+        if (!remoteFile.exists()) {
+            message("A remote with that name does not exist.");
+            System.exit(0);
+        }
+
+        /* Remove the remote. */
+        remoteFile.delete();
     }
 
     public static void gitPush(String repoName, String branchName) {
-
+        /* Check if the remote name exists. */
+        File remoteFile = Utils.join(REMOTE_DIR, repoName);
+        if (!remoteFile.exists()) {
+            message("Remote directory not found.");
+            System.exit(0);
+        }
     }
 }
