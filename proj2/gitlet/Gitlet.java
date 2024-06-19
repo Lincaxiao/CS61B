@@ -17,6 +17,10 @@ public class Gitlet implements Serializable {
         currentBranchName = "master";
     }
 
+    public Map<String, Branch> getBranches() {
+        return branches;
+    }
+
     public void createBranch(String branchName) {
         Branch newBranch = new Branch(branchName);
         newBranch.getCommits().addAll

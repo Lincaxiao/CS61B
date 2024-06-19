@@ -264,6 +264,9 @@ public class Repository {
         /* Get the current branch. */
         String currentBranch = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
         for (String branch : plainFilenamesIn(HEADS_DIR)) {
+            if (branch.contains("_")) {
+                branch = branch.replace("_", "/");
+            }
             if (branch.equals(currentBranch)) {
                 System.out.println("*" + branch);
             } else {
@@ -291,7 +294,7 @@ public class Repository {
 
         for (String file : plainFilenamesIn(CWD)) {
             /* If the file is modified in the working directory, but not staged. */
-            /* This time the blobs have the file name as the key, but the hash-value is different. */
+            /* This time the blobs have the file name as key, but the hash-value is different. */
             if (headCommit.getBlobs().containsKey(file)) {
                 byte[] content = Utils.readContents(join(CWD, file));
                 String blobId = Utils.sha1(content);
@@ -344,6 +347,9 @@ public class Repository {
     private static void checkOutwithtwooprands(String[] args) {
         // checkout [branch name]
         String branchName = args[1];
+        if (branchName.contains("/")) {
+            branchName = branchName.replace("/", "_");
+        }
         /* Check if the branch exists. */
         if (!plainFilenamesIn(HEADS_DIR).contains(branchName)) {
             message("No such branch exists.");
@@ -457,6 +463,9 @@ public class Repository {
     }
 
     public static void gitBranch(String name) {
+        if (name.contains("/")) {
+            name = name.replace("/", "_");
+        }
         /* Check if the branch exists. */
         if (plainFilenamesIn(HEADS_DIR).contains(name)) {
             message("A branch with that name already exists.");
@@ -475,6 +484,9 @@ public class Repository {
     }
 
     public static void gitRmbranch(String name) {
+        if (name.contains("/")) {
+            name = name.replace("/", "_");
+        }
         /* Check if the branch exists. */
         if (!plainFilenamesIn(HEADS_DIR).contains(name)) {
             message("A branch with that name does not exist.");
@@ -551,6 +563,9 @@ public class Repository {
      * @return the commit id of the split point.
      */
     private static String findSplitPointId(String branchName) {
+        if (branchName.contains("/")) {
+            branchName = branchName.replace("/", "_");
+        }
         /* Check if the staging area is clean. */
         if (!plainFilenamesIn(ADD_STAGE_DIR).isEmpty()
                 || !plainFilenamesIn(REMOVE_STAGE_DIR).isEmpty()) {
@@ -582,6 +597,9 @@ public class Repository {
      * 2. The split point has the same content as the current branch.
      */
     private static void mergeSpecialCases(String splitPointCommitId, String branchName) {
+        if (branchName.contains("/")) {
+            branchName = branchName.replace("/", "_");
+        }
         /* Deal with the Case 1: The split point has the same content as the given branch. */
         String branchCommit = Utils.readContentsAsString(join(HEADS_DIR, branchName));
         if (splitPointCommitId.equals(branchCommit)) {
@@ -600,6 +618,9 @@ public class Repository {
     }
 
     public static void gitMerge(String branchName) {
+        if (branchName.contains("/")) {
+            branchName = branchName.replace("/", "_");
+        }
         String splitPointCommitId = findSplitPointId(branchName);
         mergeSpecialCases(splitPointCommitId, branchName);
         String currentBranchName = Utils.readObject(HEAD_FILE, Head.class).getBranchName();
@@ -816,7 +837,7 @@ public class Repository {
                 }
                 /* Update the commit directory. */
                 File commitFile = Utils.join(remote.getRemoteDir(), "objects", "commits");
-                File objectFile = Utils.join(OBJECTS_DIR, commit.getHashCode());
+                File objectFile = Utils.join(remote.getRemoteDir(), "objects", commit.getHashCode());
                 commitFile = Utils.join(commitFile, commit.getHashCode());
                 Utils.writeObject(commitFile, commit);
                 Utils.writeObject(objectFile, commit);
@@ -842,8 +863,7 @@ public class Repository {
         /* Check if the remote name exists. */
         File remoteFile = Utils.join(REMOTE_DIR, repoName);
         Remote remote = Utils.readObject(remoteFile, Remote.class);
-        String localBranchName = repoName + "/" + branchName;
-
+        String localBranchName = repoName + "_" + branchName;
         if (!remote.getRemoteDir().exists()) {
             message("Remote directory not found.");
             System.exit(0);
@@ -857,16 +877,14 @@ public class Repository {
         }
 
         /* Update the local gitlet file. */
-        File localHeadFile = Utils.join(HEADS_DIR, branchName);
-        Utils.writeContents(localHeadFile, Utils.readContentsAsString(remoteHeadFile));
 
         Gitlet gitlet = Gitlet.load();
         File remoteGitletFile = Utils.join(remote.getRemoteDir(), "gitlet");
         Gitlet remoteGitlet = Utils.readObject(remoteGitletFile, Gitlet.class);
-        if (gitlet.getBranch(branchName) == null) {
-            gitlet.createBranch(localBranchName);
-        }
-        List<Commit> currentCommits = gitlet.getCurrentBranch().getCommits();
+        gitlet.createBranch(localBranchName);
+        Branch newBranch = gitlet.getBranch(localBranchName);
+        newBranch.getMergedBranches().addAll(remoteGitlet.getCurrentBranch().getMergedBranches());
+        List<Commit> currentCommits = newBranch.getCommits();
         List<Commit> remoteCommits = remoteGitlet.getBranch(branchName).getCommits();
         currentCommits.clear();
         currentCommits.addAll(remoteCommits);
@@ -886,10 +904,14 @@ public class Repository {
             }
         }
 
+        /* Replace the "/" with "_" in the branch name. */
+        String localBranch = localBranchName.replace("/", "_");
         /* Update the head/branch pointer to the new commit. */
-        File branchFile = Utils.join(HEADS_DIR,  localBranchName);
+        File branchFile = Utils.join(HEADS_DIR,  localBranch);
         Utils.writeContents(branchFile, Utils.readContentsAsString(remoteHeadFile));
+        gitlet.save();
     }
+
 
     public static void gitPull(String repoName, String branchName) {
         gitFetch(repoName, branchName);

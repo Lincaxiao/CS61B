@@ -9,9 +9,9 @@ public class Remote implements Serializable {
     /** The remote name of the remote. */
     private String remoteName;
 
-    public Remote(String remoteName, String Path) {
+    public Remote(String remoteName, String path) {
         this.remoteName = remoteName;
-        REMOTE_DIR = Utils.join(Path);
+        REMOTE_DIR = Utils.join(path);
     }
 
     public File getRemoteDir() {
